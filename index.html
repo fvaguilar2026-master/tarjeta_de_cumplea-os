@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños, Mamá! 💖</title>
+    <!-- Tailwind CSS for modern layout and responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display for elegant headings, Poppins for clean body text -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for gorgeous UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GSAP for master timelines and smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Three.js for the 3D Birthday Cake -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Canvas Confetti for celebratory particle bursts -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #2e1026 0%, #120510 100%);
+            color: #fce7f3;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Glassmorphism card & panels */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .envelope-shadow {
+            box-shadow: 0 25px 60px -15px rgba(236, 72, 153, 0.3), 0 0 25px rgba(217, 70, 239, 0.2);
+        }
+        /* Floating background decoration animations */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(244, 114, 182, 0.6)); }
+            50% { filter: drop-shadow(0 0 30px rgba(244, 114, 182, 0.9)); }
+        }
+        .animate-float {
+            animation: float-slow 6s ease-in-out infinite;
+        }
+        .animate-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+        /* Custom scrollbar for panels */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(236, 72, 153, 0.5);
+            border-radius: 3px;
+        }
+        /* Fallback Cake Canvas container */
+        #cake-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center relative selection:bg-pink-500 selection:text-white">
+
+    <!-- Floating Background Decorative Elements (Hearts & Stars) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
+        <div class="absolute top-10 left-10 text-pink-400 text-2xl animate-float" style="animation-delay: 0s;">💖</div>
+        <div class="absolute top-20 right-16 text-purple-300 text-xl animate-float" style="animation-delay: 1.5s;">✨</div>
+        <div class="absolute bottom-16 left-20 text-pink-300 text-3xl animate-float" style="animation-delay: 3s;">🌸</div>
+        <div class="absolute bottom-24 right-20 text-yellow-300 text-2xl animate-float" style="animation-delay: 2s;">⭐</div>
+        <div class="absolute top-1/2 left-5 text-pink-400 text-lg animate-float" style="animation-delay: 4s;">💖</div>
+        <div class="absolute top-1/3 right-8 text-pink-500 text-2xl animate-float" style="animation-delay: 2.5s;">✨</div>
+    </div>
+
+    <!-- Audio & Customization Control Bar (Top Right) -->
+    <div class="absolute top-4 right-4 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+        <button id="audio-toggle-btn" class="text-pink-300 hover:text-white transition flex items-center gap-2 text-sm font-medium focus:outline-none" title="Activar/Silenciar Música">
+            <i id="audio-icon" class="fa-solid fa-volume-xmark text-lg"></i>
+            <span class="hidden sm:inline" id="audio-text">Música</span>
+        </button>
+        <div class="h-4 w-[1px] bg-white/20"></div>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.4" class="w-16 sm:w-20 accent-pink-500 cursor-pointer" title="Volumen">
+        <div class="h-4 w-[1px] bg-white/20"></div>
+        <button id="customize-btn" class="text-pink-300 hover:text-white transition flex items-center gap-1.5 text-sm font-medium focus:outline-none" title="Personalizar dedicatoria">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span class="hidden sm:inline">Editar</span>
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="relative z-10 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[90vh]">
+
+        <!-- STAGE 1: THE ENVELOPE -->
+        <div id="envelope-stage" class="w-full max-w-md transition-all duration-700 flex flex-col items-center">
+            <div class="text-center mb-6 animate-glow">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 text-xs sm:text-sm font-semibold tracking-wider uppercase mb-2">
+                    Sorpresa Especial
+                </span>
+                <h1 class="font-playfair text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-200 to-amber-200">
+                    Para la reina de nuestros corazones
+                </h1>
+            </div>
+
+            <!-- Envelope Card -->
+            <div id="envelope-box" class="envelope-shadow relative w-full aspect-[4/3] bg-gradient-to-br from-pink-900/90 via-purple-950/90 to-slate-900/90 rounded-2xl border-2 border-amber-300/40 p-6 flex flex-col items-center justify-center cursor-pointer group transition-transform duration-300 hover:scale-[1.02]">
+                <!-- Envelope Flap (CSS Shape) -->
+                <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-pink-800/80 to-purple-900/80 rounded-t-2xl border-b border-amber-300/30 origin-top transition-all duration-500 group-hover:brightness-110" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
+                
+                <!-- Wax Heart Seal -->
+                <div id="wax-seal" class="relative z-20 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-600 via-pink-600 to-amber-500 rounded-full flex items-center justify-center shadow-xl border-2 border-amber-200 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-heart text-white text-2xl sm:text-3xl drop-shadow"></i>
+                </div>
+
+                <!-- Call to action text on envelope -->
+                <div class="relative z-10 mt-6 text-center">
+                    <p class="font-playfair text-xl sm:text-2xl font-semibold text-amber-200 tracking-wide drop-shadow-md">
+                        Mamá, tienes una sorpresa 💖
+                    </p>
+                    <p class="text-xs sm:text-sm text-pink-300/80 mt-1 uppercase tracking-widest font-medium">
+                        Pulsa el sello para abrir
+                    </p>
+                </div>
+
+                <!-- Decorative corner gold filigree -->
+                <div class="absolute top-3 left-3 text-amber-300/50 text-sm">✨</div>
+                <div class="absolute top-3 right-3 text-amber-300/50 text-sm">✨</div>
+                <div class="absolute bottom-3 left-3 text-amber-300/50 text-sm">✨</div>
+                <div class="absolute bottom-3 right-3 text-amber-300/50 text-sm">✨</div>
+            </div>
+        </div>
+
+        <!-- STAGE 2: THE VIRTUAL BIRTHDAY CARD (Hidden initially) -->
+        <div id="card-stage" class="hidden w-full opacity-0 transform scale-95 transition-all duration-700">
+            <div class="glass-panel rounded-3xl p-6 sm:p-10 relative overflow-hidden border border-pink-500/30 shadow-2xl">
+                <!-- Background decorative glow inside card -->
+                <div class="absolute -top-24 -right-24 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                    
+                    <!-- Left Column: Greetings & Dedication -->
+                    <div class="lg:col-span-7 flex flex-col text-left space-y-6">
+                        <div>
+                            <span class="inline-block px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-xs font-semibold tracking-wider uppercase mb-3">
+                                🌟 ¡Día Especial!
+                            </span>
+                            <h2 id="card-title" class="font-playfair text-3xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-200 via-amber-200 to-white leading-tight">
+                                ¡Feliz cumpleaños, mamá!
+                            </h2>
+                        </div>
+
+                        <div class="bg-black/25 backdrop-blur-sm p-5 sm:p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <p id="card-dedication" class="text-sm sm:text-base leading-relaxed text-pink-100/90 italic font-light">
+                                "Gracias por tu amor infinito, por cada abrazo y por iluminar nuestras vidas. Hoy celebramos a la mamá más maravillosa del mundo. ¡Te queremos muchísimo!"
+                            </p>
+                            <p id="card-signature" class="mt-4 text-right font-playfair font-bold text-amber-300 text-base sm:text-lg">
+                                — Con todo nuestro amor ❤️
+                            </p>
+                        </div>
+
+                        <!-- Interactive Action Buttons -->
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button id="btn-wish" class="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-semibold px-4 py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-fire-flame-curved text-base"></i>
+                                <span id="wish-btn-text">Pide un deseo (Apagar velas)</span>
+                            </button>
+                            <button id="btn-hug" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-semibold px-4 py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-heart text-base"></i>
+                                <span>Te mando un abrazo</span>
+                            </button>
+                            <button id="btn-celebrate" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-4 py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-champagne-glasses text-base"></i>
+                                <span>¡A celebrar!</span>
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Feedback Message Box -->
+                        <div id="feedback-box" class="hidden bg-pink-500/20 border border-pink-400/40 rounded-xl p-3 text-center text-pink-200 text-sm font-medium animate-pulse">
+                        </div>
+                    </div>
+
+                    <!-- Right Column: 3D Cake / Canvas Container -->
+                    <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                        <div id="cake-container" class="relative w-full h-[280px] sm:h-[340px] rounded-2xl bg-gradient-to-b from-purple-950/40 to-black/40 border border-white/10 shadow-2xl overflow-hidden flex items-center justify-center">
+                            <!-- Fallback / Three.js Canvas gets injected here -->
+                            <div id="cake-loading" class="text-pink-300 text-sm flex flex-col items-center gap-2">
+                                <i class="fa-solid fa-cake-candles text-3xl animate-bounce text-pink-400"></i>
+                                <span>Preparando la torta de cumpleaños...</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-pink-300/70 mt-2 text-center italic">
+                            💡 Gira la torta arrastrando el cursor o tu dedo.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Footer Navigation inside Card -->
+                <div class="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm text-pink-300/80">
+                    <button id="reset-envelope-btn" class="hover:text-white transition flex items-center gap-1.5 focus:outline-none">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Volver a ver el sobre</span>
+                    </button>
+                    <button id="download-card-btn" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition border border-white/20 flex items-center gap-2 focus:outline-none font-medium">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Descargar Tarjeta</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- CUSTOMIZATION MODAL (Hidden by default) -->
+    <div id="customize-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="glass-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 border border-pink-500/40 shadow-2xl relative transform scale-95 transition-transform duration-300" id="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-playfair text-2xl font-bold text-amber-200 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib text-pink-400"></i> Personalizar Tarjeta
+                </h3>
+                <button id="close-modal-btn" class="text-pink-300 hover:text-white text-xl p-1 focus:outline-none">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="customization-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-pink-300 font-semibold mb-1">Título / Saludo</label>
+                    <input type="text" id="input-title" value="¡Feliz cumpleaños, mamá!" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-pink-300/40 focus:outline-none focus:border-pink-500 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-pink-300 font-semibold mb-1">Dedicatoria emotiva</label>
+                    <textarea id="input-dedication" rows="4" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-pink-300/40 focus:outline-none focus:border-pink-500 text-sm resize-none" required>Gracias por tu amor infinito, por cada abrazo y por iluminar nuestras vidas. Hoy celebramos a la mamá más maravillosa del mundo. ¡Te queremos muchísimo!</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-pink-300 font-semibold mb-1">Firma</label>
+                    <input type="text" id="input-signature" value="— Con todo nuestro amor ❤️" class="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-pink-300/40 focus:outline-none focus:border-pink-500 text-sm" required>
+                </div>
+                <div class="pt-4 flex items-center justify-end gap-3">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 rounded-xl text-pink-300 hover:text-white text-sm font-medium transition">Cancelar</button>
+                    <button type="submit" class="bg-gradient-to-r from-pink-600 to-amber-500 hover:from-pink-500 hover:to-amber-400 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg transition text-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MESSAGE / NOTIFICATION TOAST -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-purple-950/90 border border-pink-500/50 text-pink-100 px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 text-sm font-medium flex items-center gap-3">
+        <i id="toast-icon" class="fa-solid fa-heart text-pink-400 text-lg"></i>
+        <span id="toast-text">¡Mensaje de prueba!</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ==========================================
+            // 1. WEB AUDIO API SYNTHESIZER & SOUNDS
+            // ==========================================
+            let audioCtx = null;
+            let isAudioPlaying = false;
+            let audioInterval = null;
+            let currentVolume = 0.4;
+            let masterGainNode = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                    masterGainNode = audioCtx.createGain();
+                    masterGainNode.gain.value = currentVolume;
+                    masterGainNode.connect(audioCtx.destination);
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            // Play gentle happy birthday notes sequence
+            // Notes frequencies for Happy Birthday
+            const hbNotes = [
+                { freq: 261.63, duration: 0.4 }, // C4
+                { freq: 261.63, duration: 0.2 }, // C4
+                { freq: 293.66, duration: 0.6 }, // D4
+                { freq: 261.63, duration: 0.6 }, // C4
+                { freq: 349.23, duration: 0.6 }, // F4
+                { freq: 329.63, duration: 1.2 }, // E4
+                
+                { freq: 261.63, duration: 0.4 }, // C4
+                { freq: 261.63, duration: 0.2 }, // C4
+                { freq: 293.66, duration: 0.6 }, // D4
+                { freq: 261.63, duration: 0.6 }, // C4
+                { freq: 392.00, duration: 0.6 }, // G4
+                { freq: 349.23, duration: 1.2 }, // F4
+
+                { freq: 261.63, duration: 0.4 }, // C4
+                { freq: 261.63, duration: 0.2 }, // C4
+                { freq: 523.25, duration: 0.6 }, // C5
+                { freq: 440.00, duration: 0.6 }, // A4
+                { freq: 349.23, duration: 0.6 }, // F4
+                { freq: 329.63, duration: 0.6 }, // E4
+                { freq: 293.66, duration: 1.0 }, // D4
+
+                { freq: 466.16, duration: 0.4 }, // Bb4
+                { freq: 466.16, duration: 0.2 }, // Bb4
+                { freq: 440.00, duration: 0.6 }, // A4
+                { freq: 349.23, duration: 0.6 }, // F4
+                { freq: 392.00, duration: 0.6 }, // G4
+                { freq: 349.23, duration: 1.4 }  // F4
+            ];
+
+            function playMelodyLoop() {
+                if (!isAudioPlaying) return;
+                initAudio();
+                
+                let noteIndex = 0;
+                
+                function playNextNote() {
+                    if (!isAudioPlaying) return;
+                    if (noteIndex >= hbNotes.length) {
+                        noteIndex = 0;
+                        audioInterval = setTimeout(playNextNote, 1500); // Pause between loops
+                        return;
+                    }
+
+                    const note = hbNotes[noteIndex];
+                    try {
+                        const osc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(note.freq, audioCtx.currentTime);
+
+                        noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                        noteGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.duration);
+
+                        osc.connect(noteGain);
+                        noteGain.connect(masterGainNode);
+
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + note.duration);
+                    } catch(e) {
+                        console.error(e);
+                    }
+
+                    noteIndex++;
+                    audioInterval = setTimeout(playNextNote, note.duration * 900);
+                }
+
+                playNextNote();
+            }
+
+            function stopMelody() {
+                isAudioPlaying = false;
+                if (audioInterval) {
+                    clearTimeout(audioInterval);
+                    audioInterval = null;
+                }
+            }
+
+            function toggleAudio() {
+                const icon = document.getElementById('audio-icon');
+                const text = document.getElementById('audio-text');
+                if (isAudioPlaying) {
+                    stopMelody();
+                    icon.className = "fa-solid fa-volume-xmark text-lg";
+                    text.textContent = "Silenciado";
+                    showToast("Música pausada", "fa-volume-xmark");
+                } else {
+                    isAudioPlaying = true;
+                    playMelodyLoop();
+                    icon.className = "fa-solid fa-volume-high text-lg text-pink-400";
+                    text.textContent = "Reproduciendo";
+                    showToast("Música activada 🎶", "fa-music");
+                }
+            }
+
+            // Sound effect for magic interactions (Chime / Sparkle)
+            function playSparkleSound() {
+                try {
+                    initAudio();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.exponentialRampToValueAtTime(1174.66, audioCtx.currentTime + 0.3); // D6
+
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(masterGainNode);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } catch(e) {}
+            }
+
+            document.getElementById('audio-toggle-btn').addEventListener('click', toggleAudio);
+            document.getElementById('volume-slider').addEventListener('input', (e) => {
+                currentVolume = parseFloat(e.target.value);
+                if (masterGainNode) {
+                    masterGainNode.gain.value = currentVolume;
+                }
+            });
+
+
+            // ==========================================
+            // 2. THREE.JS 3D BIRTHDAY CAKE & CANDLES
+            // ==========================================
+            let scene, camera, renderer, cakeGroup;
+            let candleFlames = [];
+            let candlesLit = true;
+            let animationFrameId = null;
+
+            function initThreeCake() {
+                const container = document.getElementById('cake-container');
+                container.innerHTML = ''; // clear loading
+
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+                camera.position.set(0, 4, 8);
+                camera.lookAt(0, 0.5, 0);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(width, height);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.shadowMap.enabled = true;
+                container.appendChild(renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xfff0f5, 1.2);
+                scene.add(ambientLight);
+
+                const dirLight = new THREE.DirectionalLight(0xffd700, 1.5);
+                dirLight.position.set(5, 10, 7);
+                scene.add(dirLight);
+
+                const warmPointLight = new THREE.PointLight(0xff80bf, 2, 10);
+                warmPointLight.position.set(0, 3, 0);
+                scene.add(warmPointLight);
+
+                cakeGroup = new THREE.Group();
+                scene.add(cakeGroup);
+
+                // Create Cake Layers
+                // Base plate
+                const plateGeo = new THREE.CylinderGeometry(3.2, 3.2, 0.2, 32);
+                const plateMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.1 });
+                const plate = new THREE.Mesh(plateGeo, plateMat);
+                plate.position.y = -0.1;
+                cakeGroup.add(plate);
+
+                // Bottom Tier
+                const bottomGeo = new THREE.CylinderGeometry(2.5, 2.5, 1.2, 32);
+                const cakeMat1 = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.4 }); // Pink frosting
+                const bottomTier = new THREE.Mesh(bottomGeo, cakeMat1);
+                bottomTier.position.y = 0.6;
+                cakeGroup.add(bottomTier);
+
+                // Top Tier
+                const topGeo = new THREE.CylinderGeometry(1.7, 1.7, 1.0, 32);
+                const cakeMat2 = new THREE.MeshStandardMaterial({ color: 0xec4899, roughness: 0.4 }); // Darker pink
+                const topTier = new THREE.Mesh(topGeo, cakeMat2);
+                topTier.position.y = 1.7;
+                cakeGroup.add(topTier);
+
+                // Decorative Gold Band / Ribbons
+                const bandGeo = new THREE.TorusGeometry(2.52, 0.05, 16, 64);
+                const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+                const band1 = new THREE.Mesh(bandGeo, goldMat);
+                band1.rotation.x = Math.PI / 2;
+                band1.position.y = 0.6;
+                cakeGroup.add(band1);
+
+                // Candles (5 candles in a circle)
+                candleFlames = [];
+                const candleCount = 5;
+                const radius = 0.9;
+
+                for (let i = 0; i < candleCount; i++) {
+                    const angle = (i / candleCount) * Math.PI * 2;
+                    const x = Math.cos(angle) * radius;
+                    const z = Math.sin(angle) * radius;
+
+                    const candleGroup = new THREE.Group();
+                    candleGroup.position.set(x, 2.2, z);
+
+                    // Candle stick
+                    const stickGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16);
+                    const stickMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 });
+                    const stick = new THREE.Mesh(stickGeo, stickMat);
+                    stick.position.y = 0.3;
+                    candleGroup.add(stick);
+
+                    // Flame
+                    const flameGeo = new THREE.SphereGeometry(0.12, 16, 16);
+                    const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+                    const flame = new THREE.Mesh(flameGeo, flameMat);
+                    flame.position.y = 0.7;
+                    candleGroup.add(flame);
+                    candleFlames.push(flame);
+
+                    cakeGroup.add(candleGroup);
+                }
+
+                // Mouse / Touch rotation interaction variables
+                let isDragging = false;
+                let previousMousePosition = { x: 0, y: 0 };
+
+                container.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    cakeGroup.rotation.y += deltaX * 0.008;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                window.addEventListener('mouseup', () => { isDragging = false; });
+
+                // Touch support
+                container.addEventListener('touchstart', (e) => {
+                    isDragging = true;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                    cakeGroup.rotation.y += deltaX * 0.008;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                });
+
+                window.addEventListener('touchend', () => { isDragging = false; });
+
+                // Window resize handler
+                window.addEventListener('resize', () => {
+                    if (!container) return;
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                });
+
+                // Animation loop
+                let clock = new THREE.Clock();
+                function animateCake() {
+                    animationFrameId = requestAnimationFrame(animateCake);
+                    const elapsedTime = clock.getElapsedTime();
+
+                    if (!isDragging) {
+                        cakeGroup.rotation.y += 0.003; // Gentle auto-rotation
+                    }
+
+                    // Flicker flames if lit
+                    if (candlesLit) {
+                        candleFlames.forEach((flame, index) => {
+                            flame.scale.y = 1 + Math.sin(elapsedTime * 15 + index) * 0.2;
+                            flame.scale.x = 1 + Math.cos(elapsedTime * 12 + index) * 0.15;
+                        });
+                    }
+
+                    renderer.render(scene, camera);
+                }
+                animateCake();
+            }
+
+            function extinguishCandles() {
+                candlesLit = false;
+                candleFlames.forEach(flame => {
+                    gsap.to(flame.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 0.4 });
+                    flame.material.color.setHex(0x555555);
+                });
+            }
+
+            function relightCandles() {
+                candlesLit = true;
+                candleFlames.forEach(flame => {
+                    gsap.to(flame.scale, { x: 1, y: 1, z: 1, duration: 0.4 });
+                    flame.material.color.setHex(0xffaa00);
+                });
+            }
+
+
+            // ==========================================
+            // 3. CONFETTI & ANIMATIONS (GSAP & Confetti)
+            // ==========================================
+            function triggerGrandCelebration() {
+                playSparkleSound();
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#ff69b4', '#ffd700', '#da70d6', '#ffffff', '#ff1493']
+                });
+                
+                // Side cannons
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 80,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.7 }
+                    });
+                    confetti({
+                        particleCount: 80,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.7 }
+                    });
+                }, 250);
+            }
+
+            const envelopeStage = document.getElementById('envelope-stage');
+            const cardStage = document.getElementById('card-stage');
+            const envelopeBox = document.getElementById('envelope-box');
+
+            envelopeBox.addEventListener('click', () => {
+                // Start music automatically on user interaction if not playing
+                if (!isAudioPlaying) {
+                    isAudioPlaying = true;
+                    playMelodyLoop();
+                    document.getElementById('audio-icon').className = "fa-solid fa-volume-high text-lg text-pink-400";
+                    document.getElementById('audio-text').textContent = "Reproduciendo";
+                }
+
+                // GSAP Opening Envelope Timeline
+                const tl = gsap.timeline({
+                    onComplete: () => {
+                        envelopeStage.classList.add('hidden');
+                        cardStage.classList.remove('hidden');
+                        
+                        // Animate Card entering
+                        gsap.to(cardStage, {
+                            opacity: 1,
+                            scale: 1,
+                            duration: 0.8,
+                            ease: 'back.out(1.2)'
+                        });
+
+                        // Initialize Three.js cake after DOM is visible
+                        setTimeout(initThreeCake, 100);
+                        triggerGrandCelebration();
+                    }
+                });
+
+                tl.to('#wax-seal', { scale: 1.3, opacity: 0, duration: 0.3 })
+                  .to('#envelope-box', { rotateX: 25, scale: 0.95, duration: 0.4 })
+                  .to('#envelope-box', { y: -50, opacity: 0, duration: 0.5 });
+            });
+
+            document.getElementById('reset-envelope-btn').addEventListener('click', () => {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                
+                gsap.to(cardStage, {
+                    opacity: 0,
+                    scale: 0.95,
+                    duration: 0.4,
+                    onComplete: () => {
+                        cardStage.classList.add('hidden');
+                        envelopeStage.classList.remove('hidden');
+                        gsap.set(envelopeBox, { y: 0, opacity: 1, rotateX: 0, scale: 1 });
+                        gsap.set('#wax-seal', { scale: 1, opacity: 1 });
+                        relightCandles();
+                    }
+                });
+            });
+
+
+            // ==========================================
+            // 4. INTERACTIVE BUTTONS & FEEDBACK
+            // ==========================================
+            const feedbackBox = document.getElementById('feedback-box');
+
+            function showFeedback(text, iconClass = 'fa-heart') {
+                feedbackBox.innerHTML = `<i class="fa-solid ${iconClass} mr-2"></i> ${text}`;
+                feedbackBox.classList.remove('hidden');
+                gsap.fromTo(feedbackBox, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3 });
+                
+                // Auto hide after 5 seconds
+                setTimeout(() => {
+                    gsap.to(feedbackBox, { opacity: 0, y: -10, duration: 0.3, onComplete: () => feedbackBox.classList.add('hidden') });
+                }, 5000);
+            }
+
+            let wishMade = false;
+            document.getElementById('btn-wish').addEventListener('click', () => {
+                playSparkleSound();
+                if (!wishMade) {
+                    extinguishCandles();
+                    showFeedback('¡Que todos tus deseos se hagan realidad, mamá! 🌟', 'fa-wand-magic-sparkles');
+                    document.getElementById('wish-btn-text').textContent = "Volver a encender velitas";
+                    triggerGrandCelebration();
+                    wishMade = true;
+                } else {
+                    relightCandles();
+                    showFeedback('¡Velitas encendidas de nuevo para pedir más deseos! ✨', 'fa-fire-flame-curved');
+                    document.getElementById('wish-btn-text').textContent = "Pide un deseo (Apagar velas)";
+                    wishMade = false;
+                }
+            });
+
+            document.getElementById('btn-hug').addEventListener('click', () => {
+                playSparkleSound();
+                // Rain of hearts confetti
+                confetti({
+                    particleCount: 60,
+                    spread: 70,
+                    origin: { y: 0.5 },
+                    shapes: ['circle'],
+                    colors: ['#ff1493', '#ff69b4', '#ff8da1', '#ffffff']
+                });
+                showFeedback('¡Un abrazo enorme, con todo mi amor y gratitud, mamá! 🤗💖', 'fa-heart');
+            });
+
+            document.getElementById('btn-celebrate').addEventListener('click', () => {
+                triggerGrandCelebration();
+                showFeedback('¡Celebrando a la mujer más maravillosa del mundo! 🥂🎉', 'fa-champagne-glasses');
+            });
+
+
+            // ==========================================
+            // 5. CUSTOMIZATION MODAL & DOWNLOAD
+            // ==========================================
+            const modal = document.getElementById('customize-modal');
+            const modalContent = document.getElementById('modal-content');
+            const customizeBtn = document.getElementById('customize-btn');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const cancelModalBtn = document.getElementById('cancel-modal-btn');
+            const customizationForm = document.getElementById('customization-form');
+
+            function openModal() {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }, 10);
+            }
+
+            function closeModal() {
+                modal.classList.add('opacity-0');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+
+            customizeBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            customizationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newTitle = document.getElementById('input-title').value;
+                const newDedication = document.getElementById('input-dedication').value;
+                const newSignature = document.getElementById('input-signature').value;
+
+                document.getElementById('card-title').textContent = newTitle;
+                document.getElementById('card-dedication').textContent = `"${newDedication}"`;
+                document.getElementById('card-signature').textContent = newSignature;
+
+                closeModal();
+                showToast("¡Tarjeta personalizada con éxito! ✨", 'fa-check');
+            });
+
+            // Toast helper
+            function showToast(message, iconName = 'fa-heart') {
+                const toast = document.getElementById('toast-message');
+                const toastText = document.getElementById('toast-text');
+                const toastIcon = document.getElementById('toast-icon');
+
+                toastText.textContent = message;
+                toastIcon.className = `fa-solid ${iconName} text-pink-400 text-lg`;
+
+                toast.classList.remove('opacity-0', 'pointer-events-none');
+                toast.classList.add('opacity-100');
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0', 'pointer-events-none');
+                }, 3500);
+            }
+
+            // Download Card Feature (Saves current HTML snapshot)
+            document.getElementById('download-card-btn').addEventListener('click', () => {
+                playSparkleSound();
+                const htmlContent = document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'tarjeta_cumpleanos_mama.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("¡Copia de la tarjeta descargada con éxito! 📥", 'fa-download');
+            });
+
+        });
+    </script>
+</body>
+</html>
